@@ -1,0 +1,382 @@
+#include <windows.h>
+
+
+#define ID_OK_BTN	2000
+#define ID_OK_BTN2	3000
+#define ID_OK_BTN3	4000
+#define ID_OK_BTN4	5000
+#define ID_OK_BTN5	6000
+
+LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
+LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+LRESULT CALLBACK ChildWndProc2(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+LRESULT CALLBACK ChildWndProc3(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+LRESULT CALLBACK ChildWndProc4(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+
+HINSTANCE g_hInst;
+LPCTSTR lpszClass = L"HelloAPI";
+LPCTSTR ChildClassName = L"ChildWin";
+LPCTSTR ChildClassName2 = L"ChildWin2";
+LPCTSTR ChildClassName3 = L"ChildWin3";
+LPCTSTR ChildClassName4 = L"ChildWin4";
+
+int APIENTRY WinMain(HINSTANCE hInstance,
+	HINSTANCE hPrevInstance,
+	LPSTR lpszCmdParam,
+	int nCmdShow)
+{
+	HWND hWnd;
+	MSG Message;
+	WNDCLASS WndClass;
+	g_hInst = hInstance;
+
+	WndClass.cbClsExtra = 0;
+	WndClass.cbWndExtra = 0;
+	WndClass.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
+	WndClass.hCursor = LoadCursor(NULL, IDC_ARROW);
+	WndClass.hIcon = LoadIcon(NULL, IDI_APPLICATION);
+	WndClass.hInstance = hInstance;
+	WndClass.lpfnWndProc = (WNDPROC)WndProc;
+	WndClass.lpszClassName = lpszClass;
+	WndClass.lpszMenuName = NULL;
+	WndClass.style = CS_HREDRAW | CS_VREDRAW;
+	RegisterClass(&WndClass);     //메인윈도우 클래스 등록
+
+	WndClass.lpfnWndProc = ChildWndProc;      //차일드 윈도우 프로시저
+	WndClass.lpszClassName = ChildClassName; //차일드 윈도우 클래스이름
+	RegisterClass(&WndClass);
+
+	WndClass.lpfnWndProc = ChildWndProc2;      //차일드 윈도우 프로시저
+	WndClass.lpszClassName = ChildClassName2; //차일드 윈도우 클래스이름
+	RegisterClass(&WndClass);
+
+	WndClass.lpfnWndProc = ChildWndProc3;      //차일드 윈도우 프로시저
+	WndClass.lpszClassName = ChildClassName3; //차일드 윈도우 클래스이름
+	RegisterClass(&WndClass);
+
+	WndClass.lpfnWndProc = ChildWndProc4;      //차일드 윈도우 프로시저
+	WndClass.lpszClassName = ChildClassName4; //차일드 윈도우 클래스이름
+	RegisterClass(&WndClass);
+
+	hWnd = CreateWindow(lpszClass,			//윈도우클래스 이름
+		L"POKEMON",			    //윈도우타이틀
+		WS_OVERLAPPEDWINDOW | WS_VISIBLE,   //윈도우스타일
+		0, 0,							//윈도우가 보일때 X Y좌표
+		1220, 780,							//윈도우의 폭과 높이				
+		(HWND)NULL,							//부모윈도우 핸들
+		(HMENU)NULL,						//윈도우가 가지는 메뉴핸들
+		hInstance,							//인스턴스핸들
+		NULL);								//여분의 데이터
+
+	ShowWindow(hWnd, nCmdShow);
+
+	while (GetMessage(&Message, 0, 0, 0)) {
+		TranslateMessage(&Message);
+		DispatchMessage(&Message);
+	}
+	return Message.wParam;
+}
+#include "resource.h"
+LRESULT CALLBACK WndProc(HWND hWnd, UINT iMessage,
+	WPARAM wParam, LPARAM lParam)
+{
+	HDC hdc, MemDC;
+	PAINTSTRUCT ps;
+	HBITMAP bit, obit;
+	LPCTSTR text = L"포켓몬을 선택해주세요!";
+	LPCTSTR developer = L"제작자 : 신상연(202134-154071)";
+	switch (iMessage) {
+	case WM_PAINT:
+	{
+		HDC hdc = BeginPaint(hWnd, &ps);
+
+		MemDC = CreateCompatibleDC(hdc);
+		bit = LoadBitmap(g_hInst, MAKEINTRESOURCE(101));
+		obit = (HBITMAP)SelectObject(MemDC, bit);
+		BitBlt(hdc, 0, 0, 1200, 750, MemDC, 0, 0, SRCCOPY);
+
+		SelectObject(MemDC, obit);
+		DeleteObject(bit);
+		DeleteDC(MemDC);
+
+		SetTextJustification(hdc, 10, 10);
+		TextOut(hdc, 500, 200, text, lstrlen(text));
+		SetBkColor(hdc, RGB(0, 255, 0)); // 글자배경색상
+		SetTextColor(hdc, RGB(255, 0, 0)); // 글자색상
+		TextOut(hdc, 500, 650, developer, lstrlen(developer));
+		EndPaint(hWnd, &ps);
+		return 0;
+	}
+	case WM_CREATE:
+	{
+		HWND hChildWnd = CreateWindow(
+			ChildClassName,     		// 차일드 윈도우 클래스 이름 
+			L"pokemon1",            	// 윈도우 타이틀 
+			WS_OVERLAPPEDWINDOW | WS_CHILD,  // 윈도우  스타일 
+			0,       		// 윈도우 보일 때 x 좌표 
+			0,       		// 윈도우 보일 때 y 좌표 
+			220,       		// 윈도우 폭
+			220,       		// 윈도우 높이
+			hWnd,         		// 부모 윈도우
+			(HMENU)1000,        	// 차일드 윈도우ID 
+			g_hInst,           		// 인스턴스 핸들 
+			(LPVOID)NULL);      	// 여분의 
+		ShowWindow(hChildWnd, SW_SHOW);
+
+		hChildWnd = CreateWindow(
+			ChildClassName2,     		// 차일드 윈도우 클래스 이름 
+			L"pokemon2",            	// 윈도우 타이틀 
+			WS_OVERLAPPEDWINDOW | WS_CHILD,  // 윈도우  스타일 
+			980,       		// 윈도우 보일 때 x 좌표 
+			0,       		// 윈도우 보일 때 y 좌표 
+			220,       		// 윈도우 폭
+			220,       		// 윈도우 높이
+			hWnd,         		// 부모 윈도우
+			(HMENU)2000,        	// 차일드 윈도우ID 
+			g_hInst,           		// 인스턴스 핸들 
+			(LPVOID)NULL);      	// 여분의 데이터
+		ShowWindow(hChildWnd, SW_SHOW);
+
+		hChildWnd = CreateWindow(
+			ChildClassName3,     		// 차일드 윈도우 클래스 이름 
+			L"pokemon3",            	// 윈도우 타이틀 
+			WS_OVERLAPPEDWINDOW | WS_CHILD,  // 윈도우  스타일 
+			0,       		// 윈도우 보일 때 x 좌표 
+			530,       		// 윈도우 보일 때 y 좌표 
+			220,       		// 윈도우 폭
+			220,       		// 윈도우 높이
+			hWnd,         		// 부모 윈도우
+			(HMENU)3000,        	// 차일드 윈도우ID 
+			g_hInst,           		// 인스턴스 핸들 
+			(LPVOID)NULL);      	// 여분의 데이터
+		ShowWindow(hChildWnd, SW_SHOW);
+
+		hChildWnd = CreateWindow(
+			ChildClassName4,     		// 차일드 윈도우 클래스 이름 
+			L"pokemon4",            	// 윈도우 타이틀 
+			WS_OVERLAPPEDWINDOW | WS_CHILD,  // 윈도우  스타일 
+			980,       		// 윈도우 보일 때 x 좌표 
+			530,       		// 윈도우 보일 때 y 좌표 
+			220,       		// 윈도우 폭
+			220,       		// 윈도우 높이
+			hWnd,         		// 부모 윈도우
+			(HMENU)4000,        	// 차일드 윈도우ID 
+			g_hInst,           		// 인스턴스 핸들 
+			(LPVOID)NULL);      	// 여분의 데이터
+		ShowWindow(hChildWnd, SW_SHOW);
+
+		hChildWnd = CreateWindow(
+			L"button",        		// 윈도우 클래스 이름 
+			L"포켓몬 공식홈페이지",			// 윈도우 타이틀 
+			WS_CHILD | WS_VISIBLE, 	// 윈도우 스타일 
+			510,       		// 윈도우 보일 때 x 좌표 
+			100,       		// 윈도우 보일 때 y 좌표 
+			150,       		// 윈도우 폭
+			30,       		// 윈도우 높이
+			hWnd,         		// 부모 윈도우
+			(HMENU)ID_OK_BTN,   	// 컨트롤 ID
+			g_hInst,           		// 인스턴스 핸들 
+			(LPVOID)NULL);      	// 여분의 데이터
+
+		hChildWnd = CreateWindow(
+			L"button",        		// 윈도우 클래스 이름 
+			L"이상해씨",			// 윈도우 타이틀 
+			WS_CHILD | WS_VISIBLE, 	// 윈도우 스타일 
+			300,       		// 윈도우 보일 때 x 좌표 
+			400,       		// 윈도우 보일 때 y 좌표 
+			100,       		// 윈도우 폭
+			30,       		// 윈도우 높이
+			hWnd,         		// 부모 윈도우
+			(HMENU)ID_OK_BTN2,   	// 컨트롤 ID
+			g_hInst,           		// 인스턴스 핸들 
+			(LPVOID)NULL);      	// 여분의 데이터
+		
+		hChildWnd = CreateWindow(
+			L"button",        		// 윈도우 클래스 이름 
+			L"파이리",			// 윈도우 타이틀 
+			WS_CHILD | WS_VISIBLE, 	// 윈도우 스타일 
+			450,       		// 윈도우 보일 때 x 좌표 
+			400,       		// 윈도우 보일 때 y 좌표 
+			100,       		// 윈도우 폭
+			30,       		// 윈도우 높이
+			hWnd,         		// 부모 윈도우
+			(HMENU)ID_OK_BTN3,   	// 컨트롤 ID
+			g_hInst,           		// 인스턴스 핸들 
+			(LPVOID)NULL);      	// 여분의 데이터
+
+		hChildWnd = CreateWindow(
+			L"button",        		// 윈도우 클래스 이름 
+			L"꼬부기",			// 윈도우 타이틀 
+			WS_CHILD | WS_VISIBLE, 	// 윈도우 스타일 
+			600,       		// 윈도우 보일 때 x 좌표 
+			400,       		// 윈도우 보일 때 y 좌표 
+			100,       		// 윈도우 폭
+			30,       		// 윈도우 높이
+			hWnd,         		// 부모 윈도우
+			(HMENU)ID_OK_BTN4,   	// 컨트롤 ID
+			g_hInst,           		// 인스턴스 핸들 
+			(LPVOID)NULL);      	// 여분의 데이터
+
+		hChildWnd = CreateWindow(
+			L"button",        		// 윈도우 클래스 이름 
+			L"피카츄",			// 윈도우 타이틀 
+			WS_CHILD | WS_VISIBLE, 	// 윈도우 스타일 
+			750,       		// 윈도우 보일 때 x 좌표 
+			400,       		// 윈도우 보일 때 y 좌표 
+			100,       		// 윈도우 폭
+			30,       		// 윈도우 높이
+			hWnd,         		// 부모 윈도우
+			(HMENU)ID_OK_BTN5,   	// 컨트롤 ID
+			g_hInst,           		// 인스턴스 핸들 
+			(LPVOID)NULL);      	// 여분의 데이터
+
+		if (!hChildWnd) 	return -1;
+		return 0;
+	}
+	case WM_COMMAND:
+	{
+		if (LOWORD(wParam) == ID_OK_BTN)
+		{
+			ShellExecute(NULL, L"open", L"https://www.pokemonkorea.co.kr/pokedex", NULL, NULL, SW_SHOW);
+		}
+		else if (LOWORD(wParam) == ID_OK_BTN2) {
+			MessageBox(hWnd, L"태어날 때부터 등에 있는 이상한 씨앗과 함께 성장하며 자란다. 일정 시간이 지나 씨앗이 꽃봉오리가 되면 이상해풀로 진화한다.", L"이상해씨", MB_OK);
+		}
+		else if (LOWORD(wParam) == ID_OK_BTN3) {
+			MessageBox(hWnd, L"뜨거운 것을 좋아하는 성격이다. 꼬리에 있는 불꽃은 생명을 나타내는 표시로 건강하면 강한 불꽃이 나오고 건강하지 않으면 약한 불꽃이 나온다. 리자드로 진화한다.", L"파이리", MB_OK);
+		}
+		else if (LOWORD(wParam) == ID_OK_BTN4) {
+			MessageBox(hWnd, L"꼬마 거북이 포켓몬. 딱딱한 등껍질은 여러모로 쓸모가 많다. 일단 몸을 지키는 것도 있지만 반격을 할 때 더 효과가 좋다고 한다. 어니부기로 진화한다.", L"꼬부기", MB_OK);
+		}
+		else if (LOWORD(wParam) == ID_OK_BTN5){
+			MessageBox(hWnd, L"붉은 뺨은 전기 주머니이다. 이 전기 주머니에 전기를 모아 자신을 위협하는 천적들을 물리친다. 천둥의돌을 사용하면 라이츄로 진화한다.", L"피카츄", MB_OK);
+		}
+
+		return 0;
+	}
+	case WM_DESTROY:
+		PostQuitMessage(0);
+		return 0;
+	}
+	return(DefWindowProc(hWnd, iMessage, wParam, lParam));
+}
+LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+	LPCTSTR text = L"";
+	HDC hdc, MemDC;
+	HBITMAP bit, obit;
+	switch (message)
+	{
+	case WM_PAINT:
+	{
+		PAINTSTRUCT ps;
+		HDC hdc = BeginPaint(hWnd, &ps);
+		TextOut(hdc, 10, 10, text, lstrlen(text));
+
+		MemDC = CreateCompatibleDC(hdc);
+		bit = LoadBitmap(g_hInst, MAKEINTRESOURCE(102));
+		obit = (HBITMAP)SelectObject(MemDC, bit);
+		BitBlt(hdc, 0, 0, 1200, 750, MemDC, 0, 0, SRCCOPY);
+
+		SelectObject(MemDC, obit);
+		DeleteObject(bit);
+		DeleteDC(MemDC);
+
+		EndPaint(hWnd, &ps);
+		return 0;
+	}
+
+	}
+
+	return DefWindowProc(hWnd, message, wParam, lParam);
+}
+LRESULT CALLBACK ChildWndProc2(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+	LPCTSTR text = L"";
+	HDC hdc, MemDC;
+	HBITMAP bit, obit;
+	switch (message)
+	{
+	case WM_PAINT:
+	{
+		PAINTSTRUCT ps;
+		HDC hdc = BeginPaint(hWnd, &ps);
+		TextOut(hdc, 10, 10, text, lstrlen(text));
+
+		MemDC = CreateCompatibleDC(hdc);
+		bit = LoadBitmap(g_hInst, MAKEINTRESOURCE(103));
+		obit = (HBITMAP)SelectObject(MemDC, bit);
+		BitBlt(hdc, 0, 0, 1200, 750, MemDC, 0, 0, SRCCOPY);
+
+		SelectObject(MemDC, obit);
+		DeleteObject(bit);
+		DeleteDC(MemDC);
+
+		EndPaint(hWnd, &ps);
+		return 0;
+	}
+
+	}
+
+	return DefWindowProc(hWnd, message, wParam, lParam);
+}
+LRESULT CALLBACK ChildWndProc3(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+	LPCTSTR text = L"";
+	HDC hdc, MemDC;
+	HBITMAP bit, obit;
+	switch (message)
+	{
+	case WM_PAINT:
+	{
+		PAINTSTRUCT ps;
+		HDC hdc = BeginPaint(hWnd, &ps);
+		TextOut(hdc, 10, 10, text, lstrlen(text));
+
+		MemDC = CreateCompatibleDC(hdc);
+		bit = LoadBitmap(g_hInst, MAKEINTRESOURCE(104));
+		obit = (HBITMAP)SelectObject(MemDC, bit);
+		BitBlt(hdc, 0, 0, 1200, 750, MemDC, 0, 0, SRCCOPY);
+
+		SelectObject(MemDC, obit);
+		DeleteObject(bit);
+		DeleteDC(MemDC);
+
+		EndPaint(hWnd, &ps);
+		return 0;
+	}
+
+	}
+
+	return DefWindowProc(hWnd, message, wParam, lParam);
+}
+LRESULT CALLBACK ChildWndProc4(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+	LPCTSTR text = L"";
+	HDC hdc, MemDC;
+	HBITMAP bit, obit;
+	switch (message)
+	{
+	case WM_PAINT:
+	{
+		PAINTSTRUCT ps;
+		HDC hdc = BeginPaint(hWnd, &ps);
+		TextOut(hdc, 10, 10, text, lstrlen(text));
+
+		MemDC = CreateCompatibleDC(hdc);
+		bit = LoadBitmap(g_hInst, MAKEINTRESOURCE(105));
+		obit = (HBITMAP)SelectObject(MemDC, bit);
+		BitBlt(hdc, 0, 0, 1200, 750, MemDC, 0, 0, SRCCOPY);
+
+		SelectObject(MemDC, obit);
+		DeleteObject(bit);
+		DeleteDC(MemDC);
+
+		EndPaint(hWnd, &ps);
+		return 0;
+	}
+
+	}
+
+	return DefWindowProc(hWnd, message, wParam, lParam);
+}
